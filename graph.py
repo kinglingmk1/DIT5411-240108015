@@ -1,0 +1,188 @@
+import matplotlib.pyplot as plt
+import re
+
+# Training log data
+log_data = """
+Epoch 1/50
+2503/2503 [==============================] - 125s 45ms/step - loss: 5.3906 - accuracy: 0.0445 - val_loss: 3.6117 - val_accuracy: 0.1705 - lr: 0.0010
+Epoch 2/50
+2503/2503 [==============================] - 110s 44ms/step - loss: 2.5953 - accuracy: 0.3433 - val_loss: 1.1486 - val_accuracy: 0.6911 - lr: 0.0010
+Epoch 3/50
+2503/2503 [==============================] - 109s 44ms/step - loss: 1.6528 - accuracy: 0.5500 - val_loss: 0.7361 - val_accuracy: 0.7973 - lr: 0.0010
+Epoch 4/50
+2503/2503 [==============================] - 109s 43ms/step - loss: 1.2782 - accuracy: 0.6453 - val_loss: 0.5533 - val_accuracy: 0.8470 - lr: 0.0010
+Epoch 5/50
+2503/2503 [==============================] - 105s 42ms/step - loss: 1.0727 - accuracy: 0.6976 - val_loss: 0.4610 - val_accuracy: 0.8727 - lr: 0.0010
+Epoch 6/50
+2503/2503 [==============================] - 108s 43ms/step - loss: 0.9342 - accuracy: 0.7339 - val_loss: 0.3731 - val_accuracy: 0.8919 - lr: 0.0010
+Epoch 7/50
+2503/2503 [==============================] - 127s 51ms/step - loss: 0.8379 - accuracy: 0.7588 - val_loss: 0.3374 - val_accuracy: 0.9037 - lr: 0.0010
+Epoch 8/50
+2503/2503 [==============================] - 129s 52ms/step - loss: 0.7696 - accuracy: 0.7772 - val_loss: 0.3000 - val_accuracy: 0.9117 - lr: 0.0010
+Epoch 9/50
+2503/2503 [==============================] - 125s 50ms/step - loss: 0.7149 - accuracy: 0.7931 - val_loss: 0.2868 - val_accuracy: 0.9160 - lr: 0.0010
+Epoch 10/50
+2503/2503 [==============================] - 125s 50ms/step - loss: 0.6635 - accuracy: 0.8061 - val_loss: 0.2414 - val_accuracy: 0.9292 - lr: 0.0010
+Epoch 11/50
+2503/2503 [==============================] - 129s 52ms/step - loss: 0.6203 - accuracy: 0.8190 - val_loss: 0.2486 - val_accuracy: 0.9256 - lr: 0.0010
+Epoch 12/50
+2503/2503 [==============================] - 119s 47ms/step - loss: 0.5869 - accuracy: 0.8264 - val_loss: 0.2251 - val_accuracy: 0.9334 - lr: 0.0010
+Epoch 13/50
+2503/2503 [==============================] - 116s 46ms/step - loss: 0.5566 - accuracy: 0.8353 - val_loss: 0.2191 - val_accuracy: 0.9348 - lr: 0.0010
+Epoch 14/50
+2503/2503 [==============================] - 120s 48ms/step - loss: 0.5299 - accuracy: 0.8432 - val_loss: 0.2280 - val_accuracy: 0.9325 - lr: 0.0010
+Epoch 15/50
+2503/2503 [==============================] - 116s 46ms/step - loss: 0.5026 - accuracy: 0.8503 - val_loss: 0.1973 - val_accuracy: 0.9422 - lr: 0.0010
+Epoch 16/50
+2503/2503 [==============================] - 114s 46ms/step - loss: 0.4822 - accuracy: 0.8562 - val_loss: 0.1949 - val_accuracy: 0.9421 - lr: 0.0010
+Epoch 17/50
+2503/2503 [==============================] - 115s 46ms/step - loss: 0.4704 - accuracy: 0.8605 - val_loss: 0.2212 - val_accuracy: 0.9367 - lr: 0.0010
+Epoch 18/50
+2503/2503 [==============================] - 115s 46ms/step - loss: 0.4526 - accuracy: 0.8648 - val_loss: 0.2077 - val_accuracy: 0.9383 - lr: 0.0010
+Epoch 19/50
+2503/2503 [==============================] - 113s 45ms/step - loss: 0.4343 - accuracy: 0.8693 - val_loss: 0.1795 - val_accuracy: 0.9467 - lr: 0.0010
+Epoch 20/50
+2503/2503 [==============================] - 114s 46ms/step - loss: 0.4203 - accuracy: 0.8737 - val_loss: 0.1739 - val_accuracy: 0.9486 - lr: 0.0010
+Epoch 21/50
+2503/2503 [==============================] - 114s 46ms/step - loss: 0.4054 - accuracy: 0.8782 - val_loss: 0.1661 - val_accuracy: 0.9513 - lr: 0.0010
+Epoch 22/50
+2503/2503 [==============================] - 113s 45ms/step - loss: 0.3933 - accuracy: 0.8816 - val_loss: 0.1672 - val_accuracy: 0.9501 - lr: 0.0010
+Epoch 23/50
+2503/2503 [==============================] - 113s 45ms/step - loss: 0.3800 - accuracy: 0.8849 - val_loss: 0.1525 - val_accuracy: 0.9534 - lr: 0.0010
+Epoch 24/50
+2503/2503 [==============================] - 112s 45ms/step - loss: 0.3708 - accuracy: 0.8869 - val_loss: 0.1561 - val_accuracy: 0.9546 - lr: 0.0010
+Epoch 25/50
+2503/2503 [==============================] - 104s 42ms/step - loss: 0.3623 - accuracy: 0.8906 - val_loss: 0.1562 - val_accuracy: 0.9541 - lr: 0.0010
+Epoch 26/50
+2503/2503 [==============================] - 104s 42ms/step - loss: 0.3503 - accuracy: 0.8937 - val_loss: 0.1514 - val_accuracy: 0.9562 - lr: 0.0010
+Epoch 27/50
+2503/2503 [==============================] - 105s 42ms/step - loss: 0.3416 - accuracy: 0.8960 - val_loss: 0.1493 - val_accuracy: 0.9553 - lr: 0.0010
+Epoch 28/50
+2503/2503 [==============================] - 105s 42ms/step - loss: 0.3331 - accuracy: 0.8988 - val_loss: 0.1478 - val_accuracy: 0.9567 - lr: 0.0010
+Epoch 29/50
+2503/2503 [==============================] - 104s 42ms/step - loss: 0.3288 - accuracy: 0.8991 - val_loss: 0.1452 - val_accuracy: 0.9573 - lr: 0.0010
+Epoch 30/50
+2503/2503 [==============================] - 104s 42ms/step - loss: 0.3241 - accuracy: 0.9006 - val_loss: 0.1433 - val_accuracy: 0.9589 - lr: 0.0010
+Epoch 31/50
+2503/2503 [==============================] - 105s 42ms/step - loss: 0.3131 - accuracy: 0.9041 - val_loss: 0.1430 - val_accuracy: 0.9567 - lr: 0.0010
+Epoch 32/50
+2503/2503 [==============================] - 105s 42ms/step - loss: 0.3051 - accuracy: 0.9053 - val_loss: 0.1405 - val_accuracy: 0.9574 - lr: 0.0010
+Epoch 33/50
+2503/2503 [==============================] - 105s 42ms/step - loss: 0.2999 - accuracy: 0.9073 - val_loss: 0.1356 - val_accuracy: 0.9591 - lr: 0.0010
+Epoch 34/50
+2503/2503 [==============================] - 105s 42ms/step - loss: 0.2934 - accuracy: 0.9093 - val_loss: 0.1345 - val_accuracy: 0.9600 - lr: 0.0010
+Epoch 35/50
+2503/2503 [==============================] - 104s 42ms/step - loss: 0.2874 - accuracy: 0.9114 - val_loss: 0.1354 - val_accuracy: 0.9601 - lr: 0.0010
+Epoch 36/50
+2503/2503 [==============================] - 103s 41ms/step - loss: 0.2821 - accuracy: 0.9121 - val_loss: 0.1314 - val_accuracy: 0.9613 - lr: 0.0010
+Epoch 37/50
+2503/2503 [==============================] - 102s 41ms/step - loss: 0.2765 - accuracy: 0.9147 - val_loss: 0.1329 - val_accuracy: 0.9616 - lr: 0.0010
+Epoch 38/50
+2503/2503 [==============================] - 102s 41ms/step - loss: 0.2742 - accuracy: 0.9152 - val_loss: 0.1274 - val_accuracy: 0.9624 - lr: 0.0010
+Epoch 39/50
+2503/2503 [==============================] - 110s 44ms/step - loss: 0.2655 - accuracy: 0.9174 - val_loss: 0.1323 - val_accuracy: 0.9619 - lr: 0.0010
+Epoch 40/50
+2503/2503 [==============================] - 115s 46ms/step - loss: 0.2645 - accuracy: 0.9179 - val_loss: 0.1312 - val_accuracy: 0.9617 - lr: 0.0010
+Epoch 41/50
+2503/2503 [==============================] - 115s 46ms/step - loss: 0.2555 - accuracy: 0.9206 - val_loss: 0.1310 - val_accuracy: 0.9610 - lr: 0.0010
+Epoch 42/50
+2503/2503 [==============================] - 114s 46ms/step - loss: 0.2171 - accuracy: 0.9315 - val_loss: 0.1166 - val_accuracy: 0.9662 - lr: 5.0000e-04
+Epoch 43/50
+2503/2503 [==============================] - 114s 45ms/step - loss: 0.2004 - accuracy: 0.9364 - val_loss: 0.1146 - val_accuracy: 0.9660 - lr: 5.0000e-04
+Epoch 44/50
+2503/2503 [==============================] - 114s 45ms/step - loss: 0.1913 - accuracy: 0.9398 - val_loss: 0.1139 - val_accuracy: 0.9672 - lr: 5.0000e-04
+Epoch 45/50
+2503/2503 [==============================] - 113s 45ms/step - loss: 0.1844 - accuracy: 0.9417 - val_loss: 0.1105 - val_accuracy: 0.9679 - lr: 5.0000e-04
+Epoch 46/50
+2503/2503 [==============================] - 116s 46ms/step - loss: 0.1789 - accuracy: 0.9432 - val_loss: 0.1097 - val_accuracy: 0.9688 - lr: 5.0000e-04
+Epoch 47/50
+2503/2503 [==============================] - 116s 46ms/step - loss: 0.1742 - accuracy: 0.9450 - val_loss: 0.1097 - val_accuracy: 0.9689 - lr: 5.0000e-04
+Epoch 48/50
+2503/2503 [==============================] - 116s 46ms/step - loss: 0.1713 - accuracy: 0.9462 - val_loss: 0.1112 - val_accuracy: 0.9681 - lr: 5.0000e-04
+Epoch 49/50
+2503/2503 [==============================] - 114s 46ms/step - loss: 0.1662 - accuracy: 0.9467 - val_loss: 0.1158 - val_accuracy: 0.9678 - lr: 5.0000e-04
+Epoch 50/50
+2503/2503 [==============================] - 114s 46ms/step - loss: 0.1529 - accuracy: 0.9513 - val_loss: 0.1066 - val_accuracy: 0.9699 - lr: 2.5000e-04
+"""
+
+# Parse the data
+epochs = []
+losses = []
+accuracies = []
+val_losses = []
+val_accuracies = []
+times = []
+
+# Extract metrics using regex
+pattern = r'Epoch (\d+)/\d+\s+\d+/\d+ \[=+\] - (\d+)s \d+ms/step - loss: ([\d.]+) - accuracy: ([\d.]+) - val_loss: ([\d.]+) - val_accuracy: ([\d.]+)'
+
+for match in re.finditer(pattern, log_data):
+    epochs.append(int(match.group(1)))
+    times.append(int(match.group(2)))
+    losses.append(float(match.group(3)))
+    accuracies.append(float(match.group(4)))
+    val_losses.append(float(match.group(5)))
+    val_accuracies.append(float(match.group(6)))
+
+# Create three separate graphs
+fig, axes = plt.subplots(3, 1, figsize=(12, 10))
+
+# Graph 1: Loss and Accuracy
+ax1 = axes[0]
+ax1_twin = ax1.twinx()
+line1 = ax1.plot(epochs, losses, 'b-', label='Training Loss', linewidth=2)
+line2 = ax1_twin.plot(epochs, accuracies, 'r-', label='Training Accuracy', linewidth=2)
+ax1.set_xlabel('Epoch', fontsize=12)
+ax1.set_ylabel('Loss', color='b', fontsize=12)
+ax1_twin.set_ylabel('Accuracy', color='r', fontsize=12)
+ax1.tick_params(axis='y', labelcolor='b')
+ax1_twin.tick_params(axis='y', labelcolor='r')
+ax1.grid(True, alpha=0.3)
+lines = line1 + line2
+labels = [l.get_label() for l in lines]
+ax1.legend(lines, labels, loc='center right')
+ax1.set_title('Training Loss and Accuracy (1002 Chinese Characters)', fontsize=14, fontweight='bold')
+
+# Graph 2: Validation Accuracy and Loss
+ax2 = axes[1]
+ax2_twin = ax2.twinx()
+line3 = ax2.plot(epochs, val_accuracies, 'g-', label='Validation Accuracy', linewidth=2)
+line4 = ax2_twin.plot(epochs, val_losses, 'm-', label='Validation Loss', linewidth=2)
+ax2.set_xlabel('Epoch', fontsize=12)
+ax2.set_ylabel('Validation Accuracy', color='g', fontsize=12)
+ax2_twin.set_ylabel('Validation Loss', color='m', fontsize=12)
+ax2.tick_params(axis='y', labelcolor='g')
+ax2_twin.tick_params(axis='y', labelcolor='m')
+ax2.grid(True, alpha=0.3)
+lines = line3 + line4
+labels = [l.get_label() for l in lines]
+ax2.legend(lines, labels, loc='center right')
+ax2.set_title('Validation Accuracy and Loss', fontsize=14, fontweight='bold')
+
+# Graph 3: Time per Epoch
+ax3 = axes[2]
+ax3.plot(epochs, times, 'orange', marker='o', linewidth=2, markersize=4)
+ax3.set_xlabel('Epoch', fontsize=12)
+ax3.set_ylabel('Time (seconds)', fontsize=12)
+ax3.grid(True, alpha=0.3)
+ax3.set_title('Training Time per Epoch', fontsize=14, fontweight='bold')
+
+# Add statistics to time graph
+avg_time = sum(times) / len(times)
+ax3.axhline(y=avg_time, color='red', linestyle='--', linewidth=1.5, label=f'Average: {avg_time:.1f}s')
+ax3.legend(loc='upper right')
+
+# Adjust layout to prevent overlap
+plt.tight_layout()
+
+# Display all graphs
+plt.show()
+
+print(f"\nTraining Summary:")
+print(f"Total Epochs: {len(epochs)}")
+print(f"Final Training Accuracy: {accuracies[-1]:.4f} ({accuracies[-1]*100:.2f}%)")
+print(f"Final Validation Accuracy: {val_accuracies[-1]:.4f} ({val_accuracies[-1]*100:.2f}%)")
+print(f"Final Training Loss: {losses[-1]:.4f}")
+print(f"Final Validation Loss: {val_losses[-1]:.4f}")
+print(f"Average Time per Epoch: {avg_time:.1f} seconds")
+print(f"Total Training Time: {sum(times)/60:.1f} minutes")
