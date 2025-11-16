@@ -69,10 +69,15 @@ Screenshoot Folder contain some test of model and the png of the grapth
 I put some sample data on output / output2 / Traditional_Chinese_Data Folder
 
 Reference
+
 https://blog.csdn.net/ctwy291314/article/details/80897143
+
 https://www.youtube.com/watch?v=xJtmj6hX5Lg&t=572s (for install tensorflow < 2.11 only) (Start from 09:08)
+
 https://github.com/AI-FREE-Team/Traditional-Chinese-Handwriting-Dataset
+
 https://www.tensorflow.org/install/pip#windows-native
+
 https://www.anaconda.com/
 
 AI Used for some code
