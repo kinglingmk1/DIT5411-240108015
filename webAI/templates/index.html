@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文字手寫辨識 - Chinese Character Recognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .canvas-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            cursor: crosshair;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-recognize {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-recognize:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-clear {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-recognize:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .prediction-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .prediction-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .prediction-item.top-prediction {
+            border: 2px solid #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .character {
+            font-size: 3em;
+            font-weight: bold;
+            color: #333;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .prediction-info {
+            flex: 1;
+            margin: 0 20px;
+        }
+
+        .confidence-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        .confidence-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.2em;
+            padding: 20px;
+        }
+
+        .error {
+            background: #ffe5e5;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .instructions {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .instructions p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            canvas {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            .character {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✍️ 中文字手寫辨識</h1>
+        <p class="subtitle">Chinese Character Recognition</p>
+
+        <div class="instructions">
+            <p><strong>使用說明：</strong>在下方畫板上繪製中文字，然後點擊「辨識」按鈕來識別您所寫的字。</p>
+            <p><strong>Instructions:</strong> Draw a Chinese character on the canvas below, then click "Recognize" to identify it.</p>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="drawingCanvas" width="400" height="400"></canvas>
+        </div>
+
+        <div class="controls">
+            <button class="btn-recognize" id="recognizeBtn">🔍 辨識 Recognize</button>
+            <button class="btn-clear" id="clearBtn">🗑️ 清除 Clear</button>
+        </div>
+
+        <div id="resultsContainer"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const recognizeBtn = document.getElementById('recognizeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Set up canvas with white background
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Set drawing style
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Drawing functions
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            if (e.type.includes('touch')) {
+                lastX = (e.touches[0].clientX - rect.left) * scaleX;
+                lastY = (e.touches[0].clientY - rect.top) * scaleY;
+            } else {
+                lastX = (e.clientX - rect.left) * scaleX;
+                lastY = (e.clientY - rect.top) * scaleY;
+            }
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            e.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let currentX, currentY;
+            if (e.type.includes('touch')) {
+                currentX = (e.touches[0].clientX - rect.left) * scaleX;
+                currentY = (e.touches[0].clientY - rect.top) * scaleY;
+            } else {
+                currentX = (e.clientX - rect.left) * scaleX;
+                currentY = (e.clientY - rect.top) * scaleY;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+
+            lastX = currentX;
+            lastY = currentY;
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // Clear canvas
+        clearBtn.addEventListener('click', () => {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            resultsContainer.innerHTML = '';
+        });
+
+        // Recognize character
+        recognizeBtn.addEventListener('click', async () => {
+            // Check if canvas has any black pixels (drawing)
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let hasDrawing = false;
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                // Check if pixel is not white (R, G, B all less than 250)
+                if (imageData.data[i] < 250 || imageData.data[i+1] < 250 || imageData.data[i+2] < 250) {
+                    hasDrawing = true;
+                    break;
+                }
+            }
+            
+            if (!hasDrawing) {
+                resultsContainer.innerHTML = '<div class="error">請先在畫板上繪製一個字！<br>Please draw a character first!</div>';
+                return;
+            }
+
+            recognizeBtn.disabled = true;
+            resultsContainer.innerHTML = '<div class="loading">⏳ 正在辨識中... Recognizing...</div>';
+
+            try {
+                // Convert canvas to base64
+                const imageDataUrl = canvas.toDataURL('image/png');
+
+                // Send to server
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ image: imageDataUrl })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.predictions);
+                } else {
+                    resultsContainer.innerHTML = `<div class="error">錯誤 Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultsContainer.innerHTML = `<div class="error">辨識失敗 Recognition failed: ${error.message}</div>`;
+            } finally {
+                recognizeBtn.disabled = false;
+            }
+        });
+
+        function displayResults(predictions) {
+            let html = '<div class="results"><h2>🎯 辨識結果 Recognition Results</h2>';
+            
+            predictions.forEach((pred, index) => {
+                const topClass = index === 0 ? 'top-prediction' : '';
+                html += `
+                    <div class="prediction-item ${topClass}">
+                        <div class="character">${pred.character}</div>
+                        <div class="prediction-info">
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${pred.confidence}%"></div>
+                            </div>
+                        </div>
+                        <div class="confidence-text">${pred.confidence.toFixed(2)}%</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            resultsContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
